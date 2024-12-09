@@ -52,7 +52,7 @@
     <div class="row g-3 text-center mt-3">
         <div class="col-md-3">
             <label for="macro-goal" class="form-label">Macronutrient Goal</label>
-            <SfDropDownList TValue="string" TItem="string" ID="macro-goal" DataSource="@MacroGoals" @bind-Value="SelectedMacroGoal" CssClass="form-control" style="width: 100%;" />
+            <SfDropDownList TValue="string" TItem="string" ID="macro-goal" DataSource="@MacroGoals" @bind-Value="Goal.MacroRatio" CssClass="form-control" style="width: 100%;" />
         </div>
     </div>
 
@@ -157,7 +157,7 @@
         // Recalculate the macronutrients with the newly selected goal
         if (Results != null)
         {
-            Macros = MacroCalculator.CalculateMacronutrients(Results.Calories, SelectedMacroGoal);
+            Macros = MacroCalculator.CalculateMacronutrients(Results.Calories, Goal.MacroRatio);
         }
     }
 }
