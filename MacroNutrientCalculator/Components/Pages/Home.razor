@@ -8,7 +8,26 @@
 
 <PageTitle>Macronutrient Calcualtor</PageTitle>
 
-<h3>Macronutrient Management Calculator</h3>
+<style>
+    .gradient-bg {
+        background: linear-gradient(to right, #007bff, #6c757d);
+        color: white;
+    }
+    
+    .custom-shadow {
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+
+    .custom-shadow:hover {
+        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
+    }
+</style>
+
+<div class="gradient-bg p-3">
+    <h1 class="text-center fw-bold">Macronutrient Calculator</h1>
+    <p class="text-white text-center fst-italic">Plan your dietary goals with ease!</p>
+</div>
 
 <div class="mt-4">
     <h4>Please enter your information</h4>
@@ -16,15 +35,15 @@
     <div class="row g-3 text-center">
         <div class="col-md-4">
             <label for="weight" class="form-label">Weight (lbs)</label>
-            <SfNumericTextBox TValue="double?" Id="weight" Placeholder="Weight (lbs)" Value="Stats.Weight" ValueChanged="@(value => Stats.Weight = value)" ShowSpinButton="false" />
+            <SfNumericTextBox TValue="double?" Id="weight" Placeholder="Weight (lbs)" Value="Stats.Weight" ValueChanged="@(value => Stats.Weight = value)" ShowSpinButton="false" CssClass="from-control shadow" />
         </div>
         <div class="col-md-4">
             <label for="height" class="form-label">Height (inches)</label>
-            <SfNumericTextBox TValue="double?" Id="height" Placeholder="Height (inches)" Value="Stats.Height" ValueChanged="@(value => Stats.Height = value)" ShowSpinButton="false" />
+            <SfNumericTextBox TValue="double?" Id="height" Placeholder="Height (inches)" Value="Stats.Height" ValueChanged="@(value => Stats.Height = value)" ShowSpinButton="false" CssClass="from-control shadow" />
         </div>
         <div class="col-md-4">
             <label for="age" class="form-label">Age</label>
-            <SfNumericTextBox TValue="int?" Id="age" Placeholder="Age" Value="Stats.Age" ValueChanged="@(value => Stats.Age = value)" ShowSpinButton="false" />
+            <SfNumericTextBox TValue="int?" Id="age" Placeholder="Age" Value="Stats.Age" ValueChanged="@(value => Stats.Age = value)" ShowSpinButton="false" CssClass="from-control shadow" />
         </div>
     </div>
 
@@ -32,19 +51,19 @@
     <div class="row g-3 text-center mt-3">
         <div class="col-md-3">
             <label for="sex" class="form-label">Sex</label>
-            <SfDropDownList TValue="string" TItem="string" Id="sex" DataSource="@SexOptions" @bind-Value="Stats.Sex" CssClass="form-control" Style="width: 100%;" />
+            <SfDropDownList TValue="string" TItem="string" Id="sex" DataSource="@SexOptions" @bind-Value="Stats.Sex" CssClass="form-control shadow-lg" Style="width: 100%;" />
         </div>
         <div class="col-md-3">
             <label for="activity-level" class="form-label">Activity Level</label>
-            <SfDropDownList TValue="string" TItem="string" Id="activity-level" DataSource="@ActivityLevels" @bind-Value="Stats.ActivityLevel" CssClass="form-control" Style="width: 100%;" />
+            <SfDropDownList TValue="string" TItem="string" Id="activity-level" DataSource="@ActivityLevels" @bind-Value="Stats.ActivityLevel" CssClass="form-control shadow-lg" Style="width: 100%;" />
         </div>
         <div class="col-md-3">
             <label for="weight-goal" class="form-label">Weight Goal</label>
-            <SfDropDownList TValue="string" TItem="string" Id="weight-goal" DataSource="@GoalTypes" @bind-Value="Goal.Type" CssClass="form-control" Style="width: 100%;" />
+            <SfDropDownList TValue="string" TItem="string" Id="weight-goal" DataSource="@GoalTypes" @bind-Value="Goal.Type" CssClass="form-control shadow-lg" Style="width: 100%;" />
         </div>
         <div class="col-md-3">
             <label for="rate" class="form-label">Rate (lbs/week)</label>
-            <SfDropDownList TValue="string" TItem="string" Id="rate" DataSource="@RateOptions" @bind-Value="Goal.Rate" CssClass="form-control" Style="width: 100%;" />
+            <SfDropDownList TValue="string" TItem="string" Id="rate" DataSource="@RateOptions" @bind-Value="Goal.Rate" CssClass="form-control shadow-lg" Style="width: 100%;" />
         </div>
     </div>
 
@@ -52,13 +71,13 @@
     <div class="row g-3 text-center mt-3">
         <div class="col-md-3">
             <label for="macro-goal" class="form-label">Macronutrient Goal</label>
-            <SfDropDownList TValue="string" TItem="string" ID="macro-goal" DataSource="@MacroGoals" @bind-Value="Goal.MacroRatio" CssClass="form-control" style="width: 100%;" />
+            <SfDropDownList TValue="string" TItem="string" ID="macro-goal" DataSource="@MacroGoals" @bind-Value="Goal.MacroRatio" CssClass="form-control shadow-lg" style="width: 100%;" />
         </div>
     </div>
 
     <!-- Calculate Button -->
     <div class="text-center mt-4">
-        <SfButton IsPrimary="true" OnClick="CalculateMacros" CssClass="btn btn-primary">Calculate Goals</SfButton>
+        <SfButton IsPrimary="true" OnClick="CalculateMacros" CssClass="btn btn-primary custom-shadow">Calculate Goals</SfButton>
     </div>
 </div>
 
