@@ -1,0 +1,100 @@
+﻿@page "/weight-tracker"
+
+@using Blazored.LocalStorage
+@using MacroNutrientCalc.Models
+@using MacroNutrientCalc.Services
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Inputs
+
+@inject ILocalStorageService LocalStorage
+
+<PageTitle>Weight Tracker</PageTitle>
+
+<h3>WeightTracker</h3>
+
+<div>
+    <h4>Log Your Weight</h4>
+    <EditForm Model="CurrentLog" OnValidSubmit="LogWeight">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label>Weight (lbs):</label>
+            <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.Weight" Placeholder="Enter weight" />
+            <ValidationMessage For="@(() => CurrentLog.Weight)" />
+        </div>
+        <div>
+            <label>Height (inches):</label>
+            <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.Height" Placeholder="Enter height" />
+            <ValidationMessage For="@(() => CurrentLog.Height)" />
+        </div>
+        <div>
+            <label>Body Fat Percentage (%):</label>
+            <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.BodyFatPercentage" Placeholder="Optional" />
+            <ValidationMessage For="@(() => CurrentLog.BodyFatPercentage)" />
+        </div>
+        <SfButton IsPrimary="true">Log</SfButton>
+    </EditForm>
+
+    <h4>Your Logs</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Weight (lbs)</th>
+                <th>Height (inches)</th>
+                <th>BMI</th>
+                <th>Body Fat Weight (lbs)</th>
+                <th>Lean Mass (lbs)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in WeightLogs)
+            {
+                <tr>
+                    <td>@log.Timpestamp</td>
+                    <td>@log.Weight lbs</td>
+                    <td>@log.Height in</td>
+                    <td>@log.BMI</td>
+                    <td>@log.BodyFatWeight lbs</td>
+                    <td>@log.LeanMass lbs</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private WeightLog CurrentLog { get; set; } = new();
+    private List<WeightLog> WeightLogs { get; set; } = new();
+    private bool IsInitialized { get; set; } = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load weight logs after the component is rendered on the client
+            WeightLogs = await LocalStorage.GetItemAsync<List<WeightLog>>("weightLogs") ?? new List<WeightLog>();
+            IsInitialized = true;
+
+            // Trigger UI update
+            StateHasChanged();
+        }
+    }
+
+    /*
+    protected override async Task OnInitializedAsync()
+    {
+        WeightLogs = await LocalStorage.GetItemAsync<List<WeightLog>>("weightlogs") ?? new List<WeightLog>();
+    }
+    */
+
+    private async Task LogWeight()
+    {
+        // Save the log only if the form passes validation
+        WeightLogs.Add(CurrentLog);
+        await LocalStorage.SetItemAsync("weightLogs", WeightLogs);
+        CurrentLog = new WeightLog();   // Reset the form
+    }
+}
