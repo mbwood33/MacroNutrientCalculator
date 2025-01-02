@@ -9,31 +9,37 @@
 <PageTitle>Macronutrient Calcualtor</PageTitle>
 
 <style>
+    /* Background gradient for the Header */
     .gradient-bg {
     background: linear-gradient(to right, #007bff, #6c757d);
     color: white;
     }
 
+    /* Custom Shadow for buttons and inputs */
     .custom-shadow {
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
     transition: box-shadow 0.3s ease-in-out;
     }
 
+    /* Hover effect to enhance shadow on buttons */
     .custom-shadow:hover {
     box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
     }
 </style>
 
+<!-- Header Section -->
 <div class="gradient-bg p-3">
     <h1 class="text-center fw-bold">Macronutrient Calculator</h1>
     <p class="text-white text-center fst-italic">Plan your dietary goals with ease!</p>
 </div>
 
-<div class="mt-4" mb-4>
+<!-- Macronutrient Calculator section -->
+<div class="mt-4">
     <h4>Please enter your information</h4>
 
-    <!-- Form with Validation -->
+    <!---->
     <EditForm Model="Stats" OnValidSubmit="CalculateMacros">
+        <!-- Form with Validation -->
         <DataAnnotationsValidator />
         <ValidationSummary />
 

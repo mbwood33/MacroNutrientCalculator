@@ -3,73 +3,192 @@
 @using Blazored.LocalStorage
 @using MacroNutrientCalc.Models
 @using MacroNutrientCalc.Services
+@using Syncfusion.Blazor
 @using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Calendars
 @using Syncfusion.Blazor.DropDowns
 @using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Grids
+@using Syncfusion.Blazor.Charts
 
 @inject ILocalStorageService LocalStorage
 
 <PageTitle>Weight Tracker</PageTitle>
 
-<h3>WeightTracker</h3>
+<style>
+    /* Background gradient for the Header */
+    .gradient-bg {
+    background: linear-gradient(to right, #007bff, #6c757d);
+    color: white;
+    }
 
-<div>
+    /* Custom Shadow for buttons and inputs */
+    .custom-shadow {
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.3s ease-in-out;
+    }
+
+    /* Hover effect to enhance shadow on buttons */
+    .custom-shadow:hover {
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
+    }
+</style>
+
+<!-- Header Section -->
+<div class="gradient-bg p-3">
+    <h1 class="text-center fw-bold">Weight Tracker</h1>
+    <p class="text-white text-center fst-italic">Track your weight, body fat percentage, and lean mass</p>
+</div>
+
+<!-- Log Your Weight section -->
+<div class="mt-4">
     <h4>Log Your Weight</h4>
+
+    <!-- Form for submitting weight logs -->
     <EditForm Model="CurrentLog" OnValidSubmit="LogWeight">
+        <!-- Form with Validation -->
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <div>
-            <label>Weight (lbs):</label>
-            <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.Weight" Placeholder="Enter weight" />
-            <ValidationMessage For="@(() => CurrentLog.Weight)" />
+        <!-- First Row: Timestamp, Weight, and Body Fat Percentage Fields -->
+        <div class="row g-3 mt-3">
+            <div class="col-md-6">
+                <label for="timestamp" class="form-label">Timestamp:</label>
+                <SfDateTimePicker TValue="DateTime" @bind-Value="CurrentLog.Timestamp" Placeholder="Select date and time" CssClass="form-control shadow"></SfDateTimePicker>
+                <ValidationMessage For="@(() => CurrentLog.Timestamp)" />
+            </div>
+            <div class="col-md-6">
+                <label for="weight" class="form-label">Weight (lbs):</label>
+                <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.Weight" id="weight" Placeholder="Enter weight" ShowSpinButton="false" CssClass="form-control shadow" />
+                <ValidationMessage For="@(() => CurrentLog.Weight)" />
+            </div>
+            <div class="col-md-6">
+                <label for="body-fat" class="form-label">Body Fat Percentage (%):</label>
+                <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.BodyFatPercentage" id="body-fat" Placeholder="Optional" ShowSpinButton="false" CssClass="form-control shadow" />
+                <ValidationMessage For="@(() => CurrentLog.BodyFatPercentage)" />
+            </div>
         </div>
-        <div>
-            <label>Height (inches):</label>
-            <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.Height" Placeholder="Enter height" />
-            <ValidationMessage For="@(() => CurrentLog.Height)" />
+
+        <!-- Second Row: Height Input -->
+        <div class="row g-3 mt-3">
+            <div class="col-md-6">
+                <label for="height" class="form-label">Height (inches):</label>
+                <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.Height" id="height" Placeholder="Enter height" ShowSpinButton="false" CssClass="form-control shadow" />
+                <ValidationMessage For="@(() => CurrentLog.Height)" />
+            </div>
         </div>
-        <div>
-            <label>Body Fat Percentage (%):</label>
-            <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.BodyFatPercentage" Placeholder="Optional" />
-            <ValidationMessage For="@(() => CurrentLog.BodyFatPercentage)" />
+
+        <!-- Submit Button Row -->
+        <div class="row-cols-3 g-3 mt-3">
+            <div class="col-md-6">
+                <SfButton IsPrimary="true" CssClass="btn btn-primary custom-shadow">Log</SfButton>
+            </div>
         </div>
-        <SfButton IsPrimary="true">Log</SfButton>
     </EditForm>
 
-    <h4>Your Logs</h4>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Weight (lbs)</th>
-                <th>Height (inches)</th>
-                <th>BMI</th>
-                <th>Body Fat Weight (lbs)</th>
-                <th>Lean Mass (lbs)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var log in WeightLogs)
-            {
-                <tr>
-                    <td>@log.Timpestamp</td>
-                    <td>@log.Weight lbs</td>
-                    <td>@log.Height in</td>
-                    <td>@log.BMI</td>
-                    <td>@log.BodyFatWeight lbs</td>
-                    <td>@log.LeanMass lbs</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <!-- Section for Displaying Weight Logs -->
+    <div class="mt-4">
+        <h4>Your Logs</h4>
+
+        <!-- Syncfusion Data Grid for displaying the weight logs -->
+        <SfGrid DataSource="@WeightLogs" AllowPaging="true" AllowSorting="true" PageSettings="new GridPageSettings { PageSize = 5 }" OnActionBegin="OnGridActionBegin">
+            <GridColumns>
+                <GridColumn Field="LocalTimestamp" HeaderText="Date" Format="MM/dd/yyyy hh:mm tt" TextAlign="TextAlign.Center" Width="150"></GridColumn>
+                <GridColumn Field="Weight" HeaderText="Weight (lbs)" TextAlign="TextAlign.Center" Width="120"></GridColumn>
+                <GridColumn Field="Height" HeaderText="Height (in)" TextAlign="TextAlign.Center" Width="120"></GridColumn>
+                <GridColumn Field="BMI" HeaderText="BMI" Format="N2" TextAlign="TextAlign.Center" Width="100"></GridColumn>
+                <GridColumn Field="BodyFatPercentage" HeaderText="Body Fat (%)" Format="N2" TextAlign="TextAlign.Center" Width="120"></GridColumn>
+                <GridColumn Field="BodyFatWeight" HeaderText="Body Fat Weight (lbs)" Format="N2" TextAlign="TextAlign.Center" Width="150"></GridColumn>
+                <GridColumn Field="LeanMass" HeaderText="Lean Mass (lbs)" Format="N2" TextAlign="TextAlign.Center" Width="150"></GridColumn>
+                <GridColumn HeaderText="Actions" TextAlign="TextAlign.Center" Width="150">
+                    <Template>
+                        <SfButton CssClass="btn btn-danger" OnClick="(() => DeleteLog((WeightLog)context))">Delete</SfButton>
+                    </Template>
+                </GridColumn>
+            </GridColumns>
+        </SfGrid>
+    </div>
+
+    <!-- Graph section -->
+    <div class="mt-5">
+        <h4>Weight Tracker Graphs</h4>
+
+        <!-- Range Dropdown -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label for="range" class="form-label">Select Range</label>
+                <SfDropDownList TValue="string" TItem="string" @bind-Value="SelectedRange" DataSource="@RangeOptions" Placeholder="Select Range" CssClass="form-control shadow"></SfDropDownList>
+            </div>
+        </div>
+
+        <!-- Weight Graph -->
+        <div class="mt-3">
+            <SfChart Title="Weight Over Time">
+                <ChartPrimaryXAxis Title="Date" ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime" LabelFormat="MM/dd/yyyy" IntervalType="Syncfusion.Blazor.Charts.IntervalType.Days"></ChartPrimaryXAxis>
+                <ChartPrimaryYAxis Title="Weight (lbs)"></ChartPrimaryYAxis>
+                <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@WeightLogs" XName="LocalTimestamp" YName="Weight" Type="ChartSeriesType.Line" Name="Weight" Width="2" Fill="#007bff">
+                        <ChartMarker Visible="true" Width="6" Height="6">
+                            <ChartDataLabel Visible="true"></ChartDataLabel>
+                        </ChartMarker>
+                    </ChartSeries>
+                </ChartSeriesCollection>
+            </SfChart>
+        </div>
+
+        <!-- Body Fat Percentage Graph -->
+        <div class="mt-3">
+            <SfChart Title="Body Fat Percentage Over Time">
+                <ChartPrimaryXAxis Title="Date" ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime" LabelFormat="MM/dd/yyyy" IntervalType="Syncfusion.Blazor.Charts.IntervalType.Days"></ChartPrimaryXAxis>
+                <ChartPrimaryYAxis Title="Body Fat (%)"></ChartPrimaryYAxis>
+                <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@WeightLogs" XName="LocalTimestamp" YName="BodyFatPercentage" Type="ChartSeriesType.Line" Name="Body Fat Percentage" Width="2" Fill="#28a745">
+                        <ChartMarker Visible="true" Width="6" Height="6">
+                            <ChartDataLabel Visible="true"></ChartDataLabel>
+                        </ChartMarker>
+                    </ChartSeries>
+                </ChartSeriesCollection>
+            </SfChart>
+        </div>
+
+        <!-- Body Composition Graph (Body Fat and Lean Muscle Mass) Graph -->
+        <div class="mt-3">
+            <SfChart Title="Body Composition Over Time">
+                <ChartPrimaryXAxis Title="Date" ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime" LabelFormat="MM/dd/yyyy" IntervalType="Syncfusion.Blazor.Charts.IntervalType.Days"></ChartPrimaryXAxis>
+                <ChartPrimaryYAxis Title="Weight (lbs)"></ChartPrimaryYAxis>
+                <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@WeightLogs" XName="LocalTimestamp" YName="BodyFatWeight" Type="ChartSeriesType.Line" Name="Body Fat Mass" Width="2" Fill="#ff3545">
+                        <ChartMarker Visible="true" Width="6" Height="6">
+                            <ChartDataLabel Visible="true"></ChartDataLabel>
+                        </ChartMarker>
+                    </ChartSeries>
+                    <ChartSeries DataSource="@WeightLogs" XName="LocalTimestamp" YName="LeanMass" Type="ChartSeriesType.Line" Name="Lean Muscle Mass" Width="2" Fill="#ffbf00">
+                        <ChartMarker Visible="true" Width="6" Height="6">
+                            <ChartDataLabel Visible="true"></ChartDataLabel>
+                        </ChartMarker>
+                    </ChartSeries>
+                </ChartSeriesCollection>
+            </SfChart>
+        </div>
+    </div>
 </div>
 
 @code {
-    private WeightLog CurrentLog { get; set; } = new();
-    private List<WeightLog> WeightLogs { get; set; } = new();
-    private bool IsInitialized { get; set; } = false;
+    private WeightLog CurrentLog { get; set; } = new();         // Represents the current weight log entry
+    private List<WeightLog> WeightLogs { get; set; } = new();   // List to store multiple weight log entries
+    private bool IsInitialized { get; set; } = false;           // Flag to check if data is initialized
 
+    private List<string> RangeOptions { get; set; } = new() { "Week", "Month", "Quarter", "Year", "All" };
+    private string SelectedRange { get; set; } = "All";
+    private List<WeightLog> FilteredLogs { get; set; } = new();
+    private Syncfusion.Blazor.Charts.ChartAxis xAxis = new ChartAxis { ValueType = Syncfusion.Blazor.Charts.ValueType.DateTime };
+    private Syncfusion.Blazor.Charts.ChartAxis yAxisWeight = new ChartAxis { Title = "Weight (lbs)", Minimum = 0 };
+    private Syncfusion.Blazor.Charts.ChartAxis yAxisBodyFat = new ChartAxis { Title = "Body Fat (%)", Minimum = 0, Maximum = 100 };
+
+    // Method to retrieve logs from local storage after rendering
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -83,18 +202,54 @@
         }
     }
 
-    /*
-    protected override async Task OnInitializedAsync()
+    protected override void OnParametersSet()
     {
-        WeightLogs = await LocalStorage.GetItemAsync<List<WeightLog>>("weightlogs") ?? new List<WeightLog>();
+        UpdateFilteredLogs();
     }
-    */
 
+    // Method to log weight data and save to local storage (to be replaced with server-side implementation later...)
     private async Task LogWeight()
     {
+        // Create a new log entry using the current form data
+        var newLog = new WeightLog
+        {
+            Timestamp = CurrentLog.Timestamp,   // Use the user-specified timestamp
+            Weight = CurrentLog.Weight,
+            Height = CurrentLog.Height,
+            BodyFatPercentage = CurrentLog.BodyFatPercentage
+        };
+
         // Save the log only if the form passes validation
         WeightLogs.Add(CurrentLog);
         await LocalStorage.SetItemAsync("weightLogs", WeightLogs);
+
         CurrentLog = new WeightLog();   // Reset the form
+        await RefreshUI();
+    }
+
+    private void UpdateFilteredLogs()
+    {
+        DateTime cutoffDate = SelectedRange switch
+        {
+            "Week" => DateTime.Now.AddDays(-7),
+            "Month" => DateTime.Now.AddMonths(-1),
+            "Quarter" => DateTime.Now.AddMonths(-3),
+            "Year" => DateTime.Now.AddYears(-1),
+            _ => DateTime.MinValue
+        };
+
+        FilteredLogs = WeightLogs.Where(log => log.Timestamp >= cutoffDate || SelectedRange == "All").ToList();
+    }
+
+    private async Task DeleteLog(WeightLog log)
+    {
+        WeightLogs.Remove(log);
+        await LocalStorage.SetItemAsync("weightLogs", WeightLogs);
+        await RefreshUI();
+    }
+
+    private async Task RefreshUI()
+    {
+        await InvokeAsync(StateHasChanged);
     }
 }

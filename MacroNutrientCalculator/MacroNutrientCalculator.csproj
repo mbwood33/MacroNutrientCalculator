@@ -8,9 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="27.2.4" />
-    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="27.2.4" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="27.2.4" />
+    <PackageReference Include="Syncfusion.Blazor.Charts" Version="28.1.37" />
+    <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="28.1.35" />
+    <PackageReference Include="Syncfusion.Blazor.Grid" Version="28.1.35" />
+    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="28.1.35" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="28.1.35" />
   </ItemGroup>
 
 </Project>

@@ -10,7 +10,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddBlazoredLocalStorage(); // Register Blazored.LocalStorage here
 
 builder.Services.AddSyncfusionBlazor();
-Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NDaF5cWWtCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdnWXZfeHVRRWFYWUJwWkY=");
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NMaF5cXmBCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdnWH1fcnVRRGdZWEF/WUQ=");
 
 var app = builder.Build();
 
