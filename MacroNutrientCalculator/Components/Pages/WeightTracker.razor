@@ -193,11 +193,13 @@
     {
         if (firstRender)
         {
-            // Load weight logs after the component is rendered on the client
+            // Load weight logs from local storage
             WeightLogs = await LocalStorage.GetItemAsync<List<WeightLog>>("weightLogs") ?? new List<WeightLog>();
-            IsInitialized = true;
 
-            // Trigger UI update
+            // Sort the logs by Timestamp
+            WeightLogs = WeightLogs.OrderBy(log => log.Timestamp).ToList();
+
+            IsInitialized = true;
             StateHasChanged();
         }
     }
@@ -213,14 +215,19 @@
         // Create a new log entry using the current form data
         var newLog = new WeightLog
         {
-            Timestamp = CurrentLog.Timestamp,   // Use the user-specified timestamp
             Weight = CurrentLog.Weight,
             Height = CurrentLog.Height,
-            BodyFatPercentage = CurrentLog.BodyFatPercentage
+            BodyFatPercentage = CurrentLog.BodyFatPercentage,
+            Timestamp = CurrentLog.Timestamp    // Use the user-specified timestamp
         };
 
+        // Add the new log
+        WeightLogs.Add(newLog);
+
+        // Sort the logs by Timestamp
+        WeightLogs = WeightLogs.OrderBy(log => log.Timestamp).ToList();
+
         // Save the log only if the form passes validation
-        WeightLogs.Add(CurrentLog);
         await LocalStorage.SetItemAsync("weightLogs", WeightLogs);
 
         CurrentLog = new WeightLog();   // Reset the form
@@ -238,7 +245,10 @@
             _ => DateTime.MinValue
         };
 
-        FilteredLogs = WeightLogs.Where(log => log.Timestamp >= cutoffDate || SelectedRange == "All").ToList();
+        FilteredLogs = WeightLogs
+            .Where(log => log.Timestamp >= cutoffDate || SelectedRange == "All")
+            .OrderBy(log => log.Timestamp)  // Ensure filtered logs are sorted
+            .ToList();
     }
 
     private async Task DeleteLog(WeightLog log)
