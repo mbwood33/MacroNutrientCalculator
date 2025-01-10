@@ -1,0 +1,192 @@
+﻿@page "/macro-calc"
+
+@using MacroNutrientCalc.Models
+@using MacroNutrientCalc.Services
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.DropDowns
+@using Syncfusion.Blazor.Inputs
+
+<PageTitle>Macronutrient Calcualtor</PageTitle>
+
+<style>
+    /* Background gradient for the Header */
+    .gradient-bg {
+        background: linear-gradient(to right, #007bff, #6c757d);
+        color: white;
+    }
+
+    /* Custom Shadow for buttons and inputs */
+    .custom-shadow {
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+
+        /* Hover effect to enhance shadow on buttons */
+        .custom-shadow:hover {
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.4);
+        }
+</style>
+
+<!-- Header Section -->
+<div class="gradient-bg p-3">
+    <h1 class="text-center fw-bold">Macronutrient Calculator</h1>
+    <p class="text-white text-center fst-italic">Plan your dietary goals with ease!</p>
+</div>
+
+<!-- Macronutrient Calculator section -->
+<div class="mt-4">
+    <h4>Please enter your information</h4>
+
+    <!---->
+    <EditForm Model="Stats" OnValidSubmit="CalculateMacros">
+        <!-- Form with Validation -->
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <!-- Numeric Input Grid -->
+        <div class="row g-3 text-center">
+            <div class="col-md-4">
+                <label for="weight" class="form-label">Weight (lbs)</label>
+                <SfNumericTextBox TValue="double?" Id="weight" Placeholder="Weight (lbs)" Value="Stats.Weight" ValueChanged="@(value => Stats.Weight = value)" ShowSpinButton="false" CssClass="from-control shadow" />
+                <ValidationMessage For="@(() => Stats.Weight)" />
+            </div>
+            <div class="col-md-4">
+                <label for="height" class="form-label">Height (inches)</label>
+                <SfNumericTextBox TValue="double?" Id="height" Placeholder="Height (inches)" Value="Stats.Height" ValueChanged="@(value => Stats.Height = value)" ShowSpinButton="false" CssClass="from-control shadow" />
+                <ValidationMessage For="@(() => Stats.Height)" />
+            </div>
+            <div class="col-md-4">
+                <label for="age" class="form-label">Age</label>
+                <SfNumericTextBox TValue="int?" Id="age" Placeholder="Age" Value="Stats.Age" ValueChanged="@(value => Stats.Age = value)" ShowSpinButton="false" CssClass="from-control shadow" />
+                <ValidationMessage For="@(() => Stats.Age)" />
+            </div>
+        </div>
+
+        <!-- Dropdown Inputs Grid -->
+        <div class="row g-3 text-center mt-3">
+            <div class="col-md-3">
+                <label for="sex" class="form-label">Sex</label>
+                <SfDropDownList TValue="string" TItem="string" Id="sex" DataSource="@SexOptions" @bind-Value="Stats.Sex" CssClass="form-control shadow-lg" Style="width: 100%;" />
+                <ValidationMessage For="@(() => Stats.Sex)" />
+            </div>
+            <div class="col-md-3">
+                <label for="activity-level" class="form-label">Activity Level</label>
+                <SfDropDownList TValue="string" TItem="string" Id="activity-level" DataSource="@ActivityLevels" @bind-Value="Stats.ActivityLevel" CssClass="form-control shadow-lg" Style="width: 100%;" />
+                <ValidationMessage For="@(() => Stats.ActivityLevel)" />
+            </div>
+            <div class="col-md-3">
+                <label for="weight-goal" class="form-label">Weight Goal</label>
+                <SfDropDownList TValue="string" TItem="string" Id="weight-goal" DataSource="@GoalTypes" @bind-Value="Goal.Type" CssClass="form-control shadow-lg" Style="width: 100%;" />
+                <ValidationMessage For="@(() => Goal.Type)" />
+            </div>
+            <div class="col-md-3">
+                <label for="rate" class="form-label">Rate (lbs/week)</label>
+                <SfDropDownList TValue="string" TItem="string" Id="rate" DataSource="@RateOptions" @bind-Value="Goal.Rate" CssClass="form-control shadow-lg" Style="width: 100%;" Disabled="@IsRateDisabled" />
+            </div>
+        </div>
+
+        <!-- Macronutrient Goal -->
+        <div class="row g-3 text-center mt-3">
+            <div class="col-md-3">
+                <label for="macro-goal" class="form-label">Macronutrient Goal</label>
+                <SfDropDownList TValue="string" TItem="string" ID="macro-goal" DataSource="@MacroGoals" @bind-Value="Goal.MacroRatio" CssClass="form-control shadow-lg" style="width: 100%;" />
+            </div>
+        </div>
+
+        <!-- Calculate Button -->
+        <div class="text-center mt-4">
+            <SfButton IsPrimary="true" Disabled="@IsButtonDisabled" OnClick="CalculateMacros" CssClass="btn btn-primary custom-shadow">Calculate Goals</SfButton>
+        </div>
+    </EditForm>
+</div>
+
+@if (!string.IsNullOrEmpty(WarningMessage))
+{
+    <p class="text-danger">@WarningMessage</p>
+}
+
+@if (Macros != null)
+{
+    <div class="mt-4 mb-4">
+        <h4>Results</h4>
+        <!-- Results grid -->
+        <div class="row text-center">
+            @foreach (var result in ResultsList)
+            {
+                <div class="col">
+                    <h6>@result.Label</h6>
+                    <SfTextBox TValue="string" Value="@result.Value" Readonly="true" CssClass="form-control d-inline-block" style="width: 150px;" />
+                </div>
+            }
+        </div>
+
+        <h5 class="mt-4">Macronutrient Goals</h5>
+        <!-- Macronutrient Grid -->
+        <div class="row text-center">
+            @foreach (var macro in MacroList)
+            {
+                <div class="col">
+                    <h6>@macro.Label</h6>
+                    <SfTextBox TValue="string" Value="@macro.Value" Readonly="true" CssClass="form-control d-inline-block" style="width: 150px;" />
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private UserStats Stats = new();
+    private GoalSettings Goal = new();
+    private MacroResults? Macros;
+    private string WarningMessage = "";
+    private CalculationResults? Results;
+    private bool IsButtonDisabled => string.IsNullOrWhiteSpace(Stats.Sex)
+                                    || string.IsNullOrWhiteSpace(Stats.ActivityLevel)
+                                    || string.IsNullOrWhiteSpace(Goal.Type)
+                                    || (Goal.Type != "Maintain" && string.IsNullOrWhiteSpace(Goal.Rate))
+                                    || Stats.Weight <= 0
+                                    || Stats.Height <= 0
+                                    || Stats.Age <= 0;
+    private bool IsRateDisabled => Goal.Type == "Maintain";
+
+    // Options for sex, activity level, etc.
+    private List<string> SexOptions = new List<string>() { "Male", "Female" };
+    private List<string> ActivityLevels = new() { "Sedentary", "Lightly Active", "Moderately Active", "Very Active", "Extremely Active" };
+    private List<string> GoalTypes = new() { "Maintain", "Lose Weight", "Gain Weight" };
+    private List<string> RateOptions = new() { "0.5", "1", "1.5", "2" };
+    private List<string> MacroGoals = new() { "Keto", "Zone", "Standard" };
+
+    // Results list for displaying BMI, TDEE, and Calories
+    private List<(string Label, string Value)> ResultsList => Results != null ? new()
+    {
+        ("BMI", $"{Math.Round(Results.BMI, 2)} kg/m²"),
+        ("TDEE (Calories/Day)", $"{Math.Round(Results.TDEE)} kcal/day"),
+        ("Calories (Goal)", $"{Math.Round(Results.Calories)} kcal")
+    } : new();
+
+    // Macro list for displaying macronutrient breakdown
+    private List<(string Label, string Value)> MacroList => Macros != null ? new()
+    {
+        ("Carbs (g)", $"{Math.Round(Macros.Carbs)} g"),
+        ("Protein (g)", $"{Math.Round(Macros.Protein)} g"),
+        ("Fat (g)", $"{Math.Round(Macros.Fat)} g")
+    } : new();
+
+    // Method to calculate macros based on user input and selected macro goal
+    private void CalculateMacros()
+    {
+        Results = MacroCalculator.Calculate(Stats, Goal);
+
+        // Check if caloric intake is too low
+        if (Results.Calories < 1200)
+        {
+            WarningMessage = "Caloric intake may be too low. Please consult with a doctor before beginning this weight loss program.";
+        }
+        else
+        {
+            WarningMessage = "";
+        }
+
+        Macros = MacroCalculator.CalculateMacronutrients(Results.Calories, Goal.MacroRatio);
+    }
+}
