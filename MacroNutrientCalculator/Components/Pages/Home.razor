@@ -1,9 +1,61 @@
 ﻿@page "/"
 
-<PageTitle>Welcome!</PageTitle>
+@using MacroNutrientCalculator.Models
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Buttons
 
-<h1>Welcome!</h1>
+<PageTitle>Home</PageTitle>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <h2 class="text-center">Sign In</h2>
+
+            <!-- Sign In Form -->
+            <EditForm Model="SignInModel" OnValidSubmit="HandleSignIn">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="form-group mt-3">
+                    <label for="username">Username</label>
+                    <SfTextBox TValue="string" Value="@SignInModel.Username" ValueChanged="@((string value) => SignInModel.Username = value)" Placeholder="Enter your username" CssClass="form-control shadow" />
+                    <ValidationMessage For="@(() => SignInModel.Username)" />
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="password">Password</label>
+                    <SfTextBox TValue="string" Value="@SignInModel.Password" ValueChanged="@((string value) => SignInModel.Password = value)" Placeholder="Enter your password" CssClass="form-control shadow" Type="InputType.Password" />
+                    <ValidationMessage For="@(() => SignInModel.Password)" />
+                </div>
+
+                <div class="mt-4">
+                    <SfButton IsPrimary="true" CssClass="btn btn-primary w-100">Sign In</SfButton>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
 
 @code {
+    private SignInModel SignInModel { get; set; } = new();
 
+    private async Task HandleSignIn()
+    {
+        // Mocked sign-in logic for now
+        if (SignInModel.Username == "testuser" && SignInModel.Password == "password")
+        {
+            // Redirect to Weight Tracker page on successful login
+            NavigationManager.NavigateTo("/weight-tracker");
+        }
+        else
+        {
+            // Show an error message (can be replaced with UI feedback)
+            Console.WriteLine("Invalid username or password.");
+        }
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
 }

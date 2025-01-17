@@ -1,26 +1,26 @@
+version: "3.9"
 services:
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "3000:3000"
+    volumes:
+      - .:/app
     depends_on:
       - db
-    environment:
-      DB_CONNECTION_STRING: "postgres://user:password@db:5432/weighttracker"
 
   db:
-    image: postgres
+    image: postgres:14
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: weighttracker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: macro_nutrient_db
     ports:
       - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
+volumes:
+  pgdata:
