@@ -1,0 +1,80 @@
+﻿@page "/Register"
+@using MacroNutrientCalc.Models
+@inject MacroNutrientCalc.Services.DatabaseService dbService
+@inject NavigationManager Navigation
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0">Register</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="registerModel" OnValidSubmit="HandleRegister">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <InputText @bind-Value="registerModel.Email" class="form-control" type="email" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <InputText @bind-Value="registerModel.Password" class="form-control" type="password" />                            
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <InputText @bind-Value="registerModel.Name" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date of Birth</label>
+                            <InputDate @bind-Value="registerModel.DateOfBirth" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Height (in)</label>
+                            <InputNumber @bind-Value="registerModel.Height" class="form-control" />
+                        </div>
+                        <div class="d-grip gap-2">
+                            <button type="submit" class="btn btn-success">Register</button>
+                        </div>
+                    </EditForm>
+                    @if (!string.IsNullOrEmpty(message))
+                    {
+                        <div class="alert alert-info mt-3">@message</div>
+                    }
+                </div>
+                <div class="card-footer text-center">
+                    <small>Already have an account? <a href="/login">Login here</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private RegisterModel registerModel = new RegisterModel();
+    private string message = string.Empty;
+
+    private void HandleRegister()
+    {
+        // Calls DatabaseService to create a new user.
+        bool created = dbService.CreateUser(
+            registerModel.Email,
+            registerModel.Password,
+            registerModel.Name,
+            registerModel.DateOfBirth,
+            registerModel.Height);
+
+        if (created)
+        {
+            message = "User created successfully. Please log in.";
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            message = "A user with this email already exists.";
+        }
+    }
+}

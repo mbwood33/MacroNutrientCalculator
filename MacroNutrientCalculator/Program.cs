@@ -1,6 +1,7 @@
 using MacroNutrientCalculator.Components;
 using Syncfusion.Blazor;
 using Blazored.LocalStorage;
+using MacroNutrientCalc.Services;   // Added to reference the DatabaseService
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,10 +10,12 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddBlazoredLocalStorage(); // Register Blazored.LocalStorage here
 builder.Services.AddRazorPages();
-builder.Services.AddSyncfusionBlazor();
 
 builder.Services.AddSyncfusionBlazor();
 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NMaF5cXmBCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdnWH1fcnVRRGdZWEF/WUQ=");
+
+// Register your DatabaseService for Login functionality
+builder.Services.AddSingleton<DatabaseService>();
 
 var app = builder.Build();
 

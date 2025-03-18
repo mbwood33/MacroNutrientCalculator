@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="Syncfusion.Blazor.Charts" Version="28.1.38" />
     <PackageReference Include="Syncfusion.Blazor.DropDowns" Version="28.1.38" />
     <PackageReference Include="Syncfusion.Blazor.Grid" Version="28.1.38" />
