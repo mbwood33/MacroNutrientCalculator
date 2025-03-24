@@ -1,21 +1,49 @@
 ﻿@page "/dashboard"
-@inject NavigationManager Navigation
+@inject NavigationManager Navigation        /* For page navigation */
+@inject UserSessionService userSessionService   /* Provides current user's info */
+@inject DatabaseService dbService   /* Optional: to refresh user data if needed */
 
-<div class="container mt-5 text-center">
-    <h2>Dashboard</h2>
-    <!-- For demonstration, the user's name is hard-coded
-    In a full implementation, retrieve the logged-in user's info. -->
-    <p>Welcome, <strong>@UserName</strong>!</p>
-    <div class="mt-4">
-        <button class="btn btn-primary me-2" @onclick="GoToProfile">View/Edit Profile</button>
-        <button class="btn btn-secondary" @onclick="GoToTracker">Weight Tracker</button>
+@using Syncfusion.Blazor.Buttons
+@using MacroNutrientCalc.Models
+@using MacroNutrientCalc.Services
+
+<PageTitle>Dashboard</PageTitle>
+
+<!-- Container for the Dashboard -->
+<div class="container mt-5">
+    <div class="card p-4 shadow">
+        <div class="card-body text-center">
+            <h2 class="card-title">Dashboard</h2>
+            <p class="card-text">
+                Welcome, <strong>@userSessionService.CurrentUserName</strong>!
+            </p>
+
+            <!-- Optionally, display additional user info (like email) -->
+            @if(!string.IsNullOrEmpty(userSessionService.CurrentUserEmail))
+            {
+                <p class="card-text">
+                    Email: @userSessionService.CurrentUserEmail
+                </p>
+            }
+            <!-- Navigation buttons to Profile and Weight Tracker pages -->
+            <div class="mt-4">
+                <SfButton CssClass="btn btn-primary me-2" OnClick="@GoToProfile">View/Edit Profile</SfButton>
+                <SfButton CssClass="btn btn-secondary" OnClick="@GoToTracker">Weight Tracker</SfButton>
+            </div>
+        </div>
     </div>
 </div>
 
 @code {
-    // For demo purposes; in a real app, get his from the user session or auth context.
-    private string UserName = "John Doe";
+    void GoToProfile() => Navigation.NavigateTo("/profile");    // Navigate to the Profile page
+    void GoToTracker() => Navigation.NavigateTo("/weight-tracker"); // Navigate to the Weight Tracker page
 
-    void GoToProfile() => Navigation.NavigateTo("/profile");
-    void GoToTracker() => Navigation.NavigateTo("/Weight-Tracker");
+    // Optionally, on initialization you can refresh user info from the database
+    protected override async Task OnInitializedAsync()
+    {
+        // If you need to refresh or load more user details, you might call:
+        // var userDetails = dbService.GetUserById(userSessionService.CurrentUserId);
+        // And then update userSessionService properties if needed.
+        await Task.CompletedTask;
+    }
 }

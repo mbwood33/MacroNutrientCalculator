@@ -19,7 +19,7 @@ Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQx
 // Loads appsettings.json automatically
 builder.Services.AddSingleton<DatabaseService>();
 
-builder.Services.AddScoped<UserSessionServices>();
+builder.Services.AddScoped<UserSessionService>();
 
 var app = builder.Build();
 

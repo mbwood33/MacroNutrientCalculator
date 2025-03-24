@@ -2,7 +2,7 @@
 
 @inject NavigationManager Navigation    /* For navigation if needed */
 @inject MacroNutrientCalc.Services.DatabaseService dbService    /* Handles database operations */
-@inject MacroNutrientCalc.Services.UserSessionServices userSessionService   /* Provides the logged-in user's ID */
+@inject MacroNutrientCalc.Services.UserSessionService userSessionService   /* Provides the logged-in user's ID */
 @using MacroNutrientCalc.Models
 @using Syncfusion.Blazor.Inputs
 @using Syncfusion.Blazor.Calendars
@@ -10,26 +10,88 @@
 
 <div class="container mt-5">
     <h3>Edit Profile</h3>
-    <EditForm Model="@userProfile" OnValidSubmit="HandleProfileUpdate">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
 
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <SfTextBox @bind-Value="userProfile.Email" Placeholder="Enter your email" CssClass="form-control" />
+    @if (!isEditing)
+    {
+        // Display the user's info in a read-only card
+        <div class="card p-3 mb-3">
+            <p><strong>Email:</strong> @userProfile.Email</p>
+            <p><strong>Name: </strong> @userProfile.Name</p>
+            <p>
+                <strong>Date of Birth:</strong>
+                @(userProfile.DateOfBirth.HasValue
+                            ? userProfile.DateOfBirth.Value.ToString("MM/dd/yyyy")
+                            : "N/A")
+            </p>
+            <p>
+                <strong>Height:</strong>
+                @(userProfile.Height.HasValue
+                            ? userProfile.Height.HasValue.ToString()
+                            : "N/A")
+            </p>
+            <!-- Button to switch to edit mode -->
+            <SfButton CssClass="btn btn-primary" OnClick="@(() => isEditing = true)">
+                Edit Profile
+            </SfButton>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Password</label>
-            <SfTextBox @bind-Value="userProfile.Password" Placeholder="Enter your password" CssClass="form-control" Type="InputType.Password" />
-        </div>
-    </EditForm>
+    }
+    else
+    {
+        // Editable form for updating user information -->
+        <EditForm Model="@userProfile" OnValidSubmit="HandleProfileUpdate">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Email Input -->
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <SfTextBox @bind-Value="userProfile.Email" Placeholder="Enter your email" CssClass="form-control" />
+            </div>
+
+            <!-- Password input -->
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <SfTextBox @bind-Value="userProfile.Password" Placeholder="Enter your password" CssClass="form-control" Type="InputType.Password" />
+            </div>
+
+            <!-- Name input -->
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <SfTextBox @bind-Value="userProfile.Name" Placeholder="Enter your name" CssClass="form-control" />
+            </div>
+
+            <!-- Date of Birth Input -->
+            <div class="mb-3">
+                <label class="form-label">Date of Birth</label>
+                <SfDatePicker @bind-Value="userProfile.DateOfBirth" Placeholder="Select your date of birth" CssClass="form-control" />
+            </div>
+
+            <!-- Height Input -->
+            <div class="mb-3">
+                <label class="form-label">Height</label>
+                <SfNumericTextBox TValue="decimal?" @bind-Value="userProfile.Height" Placeholder="Enter your height" CssClass="form-control" />
+            </div>
+
+            <!-- Buttons for saving or canceling changes -->
+            <div>
+                <SfButton CssClass="btn btn-success" ButtonType="Submit" IsPrimary="true">Save</SfButton>
+                <SfButton CssClass="btn btn-secondary ms-2" OnClick="@CancelEditing">Cancel</SfButton>
+            </div>
+        </EditForm>
+    }
+
+    <!-- Display a status message -->
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-info mt-3">@message</div>
+    }
 </div>
 
 
 @code {
-    // The model used for data-binding in the form
-    private RegisterModel userProfile = new RegisterModel();
-    private string message = string.Empty;
+    private RegisterModel userProfile = new RegisterModel();    // The userProfile model is bound to the form and used to display user data
+    private string message = string.Empty;  // Message for status updates
+    private bool isEditing = false;     // Flag indicating whether the form is in edit mode
 
     // When the component initializes, load the user's data from the database
     protected override async Task OnInitializedAsync()
@@ -48,5 +110,18 @@
         // Update the user's information in the database
         bool updated = dbService.UpdateUser(userProfile, userSessionService.CurrentUserId);
         message = updated ? "Profile updated successfully!" : "Error updating profile. Please try again.";
+        isEditing = false;  // Exit edit mode on successful update
+    }
+
+    // Resets any unsaved changes by reloading data from the database
+    private void CancelEditing()
+    {
+        int userId = userSessionService.CurrentUserId;
+        var userInfo = dbService.GetUserById(userId);
+        if (userInfo != null)
+        {
+            userProfile = userInfo;
+        }
+        isEditing = false;  // Exit edit mode
     }
 }
