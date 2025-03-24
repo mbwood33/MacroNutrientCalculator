@@ -2,31 +2,34 @@
 @using MacroNutrientCalc.Models
 @inject MacroNutrientCalc.Services.DatabaseService dbService
 @inject NavigationManager Navigation
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Buttons
+@using Microsoft.AspNetCore.Components.Forms
 
 <PageTitle>Macronutrient Calculator Login</PageTitle>
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="colcol-md-6">
+        <div class="col-md-6">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
                     <h3 class="card-title mb-0">Login</h3>
                 </div>
                 <div class="card-body">
-                    <EditForm Model="signInModel" OnValidSubmit="HandleLogin">
+                    <EditForm Model="@signInModel" OnValidSubmit="@HandleLogin">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" />
 
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <InputText @bind-Value="signInModel.Email" class="form-control" />
+                            <SfTextBox @bind-Value="signInModel.Email" Placeholder="Enter your email" CssClass="form-control shadow" />
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Password</label>
-                            <InputText @bind-Value="signInModel.Password" type="password" class="form-control" />
+                            <SfTextBox @bind-Value="signInModel.Password" Placeholder="Enter your password" CssClass="form-control shadow" Type="InputType.Password" />
                         </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Login</button>
+                        <div class="d-grid gap-2 mt-4">
+                            <SfButton CssClass="e-primary w-100" IsPrimary="true" Content="Login" />
                         </div>
                     </EditForm>
                     @if (!string.IsNullOrEmpty(message))
@@ -35,7 +38,7 @@
                     }
                 </div>
                 <div class="card-footer text-center">
-                    <small>Don't have an accoutn? <a href="/register">Sign Up</a></small>
+                    <small>Don't have an account? <a href="/register">Sign Up</a></small>
                 </div>
             </div>
         </div>
@@ -44,7 +47,7 @@
 
 
 @code {
-    private SignInModel signInModel = new SignInModel();
+    private SignInModel signInModel = new();
     private string message = string.Empty;
 
     private void HandleLogin()
@@ -55,7 +58,7 @@
         {
             message = "Login successful!";
             // Redirect to the home page or user profile
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/Dashboard");
         }
         else
         {

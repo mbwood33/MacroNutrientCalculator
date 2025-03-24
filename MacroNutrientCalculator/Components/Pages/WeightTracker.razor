@@ -102,7 +102,7 @@
                 <GridColumn Field="LeanMass" HeaderText="Lean Mass (lbs)" Format="N2" TextAlign="TextAlign.Center" Width="150"></GridColumn>
                 <GridColumn HeaderText="Actions" TextAlign="TextAlign.Center" Width="150">
                     <Template>
-                        <SfButton CssClass="btn btn-danger" OnClick="(() => DeleteLog((WeightLog)context))">Delete</SfButton>
+                        <SfButton CssClass="btn btn-danger" OnClick="async () => DeleteLog((WeightLog)context)">Delete</SfButton>
                     </Template>
                 </GridColumn>
             </GridColumns>

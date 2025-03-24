@@ -4,10 +4,10 @@ services:
     container_name: postgres_container
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: YourPassword
+      POSTGRES_PASSWORD: secretPassword123!
       POSTGRES_DB: MacronutrientDb
     ports:
-      - "5432:5432"
+      - "5431:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       
@@ -15,7 +15,7 @@ services:
     image: dpage/pgadmin4
     container_name: pgadmin_container
     environment:
-      PGADMIN_DEFAULT_EMAIL: michael.wood@jdmsolutions.com
+      PGADMIN_DEFAULT_EMAIL: user@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"

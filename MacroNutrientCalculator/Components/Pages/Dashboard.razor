@@ -1,0 +1,21 @@
+﻿@page "/dashboard"
+@inject NavigationManager Navigation
+
+<div class="container mt-5 text-center">
+    <h2>Dashboard</h2>
+    <!-- For demonstration, the user's name is hard-coded
+    In a full implementation, retrieve the logged-in user's info. -->
+    <p>Welcome, <strong>@UserName</strong>!</p>
+    <div class="mt-4">
+        <button class="btn btn-primary me-2" @onclick="GoToProfile">View/Edit Profile</button>
+        <button class="btn btn-secondary" @onclick="GoToTracker">Weight Tracker</button>
+    </div>
+</div>
+
+@code {
+    // For demo purposes; in a real app, get his from the user session or auth context.
+    private string UserName = "John Doe";
+
+    void GoToProfile() => Navigation.NavigateTo("/profile");
+    void GoToTracker() => Navigation.NavigateTo("/Weight-Tracker");
+}

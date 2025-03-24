@@ -2,7 +2,12 @@
 @using MacroNutrientCalc.Models
 @inject MacroNutrientCalc.Services.DatabaseService dbService
 @inject NavigationManager Navigation
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.Calendars
+@using Syncfusion.Blazor.Buttons
 
+<!-- Registration Form UI -->
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md col-lg-6">
@@ -11,39 +16,63 @@
                     <h3 class="card-title mb-0">Register</h3>
                 </div>
                 <div class="card-body">
+                    <!-- Blazor EditForm with validation and submission -->
                     <EditForm Model="registerModel" OnValidSubmit="HandleRegister">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" />
 
+                        <!-- Email Field -->
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <InputText @bind-Value="registerModel.Email" class="form-control" type="email" />
+                            <SfTextBox @bind-Value="registerModel.Email" Placeholder="Enter your email" CssClass="form-control" />
+                            <ValidationMessage For="@(() => registerModel.Email)" />
                         </div>
+                        <!-- Password Field -->
                         <div class="mb-3">
                             <label class="form-label">Password</label>
-                            <InputText @bind-Value="registerModel.Password" class="form-control" type="password" />                            
+                            <SfTextBox @bind-Value="registerModel.Password" Placeholder="Enter your password" CssClass="form-control" Type="InputType.Password" />
+                            <ValidationMessage For="@(() => registerModel.Password)" />
                         </div>
+
+                        <!-- Name Field -->
                         <div class="mb-3">
                             <label class="form-label">Name</label>
-                            <InputText @bind-Value="registerModel.Name" class="form-control" />
+                            <SfTextBox @bind-Value="registerModel.Name" Placeholder="Enter your name" CssClass="form-control" />
+                            <ValidationMessage For="@(() => registerModel.Name)" />
                         </div>
+
+                        <!-- Date of Birth Field -->
                         <div class="mb-3">
                             <label class="form-label">Date of Birth</label>
-                            <InputDate @bind-Value="registerModel.DateOfBirth" class="form-control" />
+                            <SfDatePicker TValue="DateTime?" @bind-Value="registerModel.DateOfBirth" Placeholder="Select your birth date" CssClass="form-control" />
+                            <ValidationMessage For="@(() => registerModel.DateOfBirth)" />
                         </div>
+
+                        <!-- Height Field (inches) -->
                         <div class="mb-3">
                             <label class="form-label">Height (in)</label>
-                            <InputNumber @bind-Value="registerModel.Height" class="form-control" />
+                            <SfNumericTextBox TValue="decimal?"
+                            Value="@registerModel.Height"
+                            ValueChanged="@(val => registerModel.Height = val)"
+                            ValueExpression="@(() => registerModel.Height)"
+                            Placeholder="Enter your height (in)"
+                            CssClass="form-control" />
+                            <ValidationMessage For="@(() => registerModel.Height)" />
                         </div>
+
+                        <!-- Submit Button -->
                         <div class="d-grip gap-2">
-                            <button type="submit" class="btn btn-success">Register</button>
+                            <SfButton IsPrimary="true" CssClass="btn btn-success w-100" Type="Submit">Register</SfButton>
                         </div>
                     </EditForm>
+
+                    <!-- Feedback Message -->
                     @if (!string.IsNullOrEmpty(message))
                     {
                         <div class="alert alert-info mt-3">@message</div>
                     }
                 </div>
+
                 <div class="card-footer text-center">
                     <small>Already have an account? <a href="/login">Login here</a></small>
                 </div>
@@ -54,27 +83,42 @@
 
 
 @code {
-    private RegisterModel registerModel = new RegisterModel();
-    private string message = string.Empty;
+    private RegisterModel registerModel = new RegisterModel();  // Create an instance of RegisterModel to hold the registration form data
+    private string message = string.Empty;      // UI message displayed after submission
 
-    private void HandleRegister()
+    /// <summary>
+    /// Handles user registration.
+    /// Validates data, stores user info, redirects on success.
+    /// </summary>
+    private async Task HandleRegister()
     {
-        // Calls DatabaseService to create a new user.
+        // Check if the DateOfBirth or Height values are null
+        // These fields are required, so if they're not filled, display an error message.
+        if (registerModel.DateOfBirth == null || registerModel.Height == null)
+        {
+            message = "Please fill in all required fields.";
+            return;
+        }
+
+        // Call the DatabaseService's CreateUser method using the data from the registerModel
+        // The .Value properties are used because DateOfBirth and Height are nullable types.
         bool created = dbService.CreateUser(
             registerModel.Email,
             registerModel.Password,
             registerModel.Name,
-            registerModel.DateOfBirth,
-            registerModel.Height);
+            registerModel.DateOfBirth.Value,
+            registerModel.Height.Value);
 
+        // Check if the user was created successfully
         if (created)
         {
-            message = "User created successfully. Please log in.";
-            Navigation.NavigateTo("/login");
+            message = "User created successfully. Redirecting to login pgae...";    // If successful, update the message to inform user
+            await Task.Delay(1000); // Wait for 1 second (1000 milliseconds) to allow the user to read the success message
+            Navigation.NavigateTo("/login");    // Redirect the user to the login page.
         }
         else
         {
-            message = "A user with this email already exists.";
+            message = "A user with this email already exists."; // If the user could not be created (likely because the email already exists), display an error
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿@page "/"
-@inject NavigationManager Navigation
+@inject NavigationManager Navigation    /* Injects the NavigationManager service for page navigation  */
 @using Syncfusion.Blazor.Buttons
 
 <div class="container mt-5">
@@ -34,6 +34,6 @@
 
 
 @code {
-    void GoToLogin() => Navigation.NavigateTo("/login");
-    void GoToRegister() => Navigation.NavigateTo("/register");
+    void GoToLogin() => Navigation.NavigateTo("/Login");        // Method to navigate to the Login page when the Login button is clicked
+    void GoToRegister() => Navigation.NavigateTo("/Register");  // Method to navigate to the Register page when the Register button is clicked
 }
