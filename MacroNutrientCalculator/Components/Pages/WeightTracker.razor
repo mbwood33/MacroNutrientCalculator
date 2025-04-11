@@ -1,6 +1,5 @@
 ﻿@page "/weight-tracker"
 
-@using Blazored.LocalStorage
 @using MacroNutrientCalc.Models
 @using MacroNutrientCalc.Services
 @using Syncfusion.Blazor
@@ -11,7 +10,9 @@
 @using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor.Charts
 
-@inject ILocalStorageService LocalStorage
+@inject DatabaseService dbService       /* For databse operations */
+@inject NavigationManager Navigation    /* For navigation if needed */
+@inject UserSessionService userSessionService   /* Provides the logged-in user's info */
 
 <PageTitle>Weight Tracker</PageTitle>
 
@@ -37,7 +38,9 @@
 <!-- Header Section -->
 <div class="gradient-bg p-3">
     <h1 class="text-center fw-bold">Weight Tracker</h1>
-    <p class="text-white text-center fst-italic">Track your weight, body fat percentage, and lean mass</p>
+    <p class="text-white text-center fst-italic">
+        Track your weight, body fat percentage, and lean mass
+    </p>
 </div>
 
 <!-- Log Your Weight section -->
@@ -69,19 +72,17 @@
             </div>
         </div>
 
-        <!-- Second Row: Height Input -->
-        <div class="row g-3 mt-3">
-            <div class="col-md-6">
-                <label for="height" class="form-label">Height (inches):</label>
-                <SfNumericTextBox TValue="double?" @bind-Value="CurrentLog.Height" id="height" Placeholder="Enter height" ShowSpinButton="false" CssClass="form-control shadow" />
-                <ValidationMessage For="@(() => CurrentLog.Height)" />
-            </div>
+        <!-- Display the stored height from the user profile -->
+        <div class="alert alert-info mt-3">
+            Using stored height: @((currentUserHeight.HasValue) ? currentUserHeight.Value.ToString() : "Not available")
         </div>
 
         <!-- Submit Button Row -->
         <div class="row-cols-3 g-3 mt-3">
             <div class="col-md-6">
-                <SfButton IsPrimary="true" CssClass="btn btn-primary custom-shadow">Log</SfButton>
+                <SfButton IsPrimary="true" CssClass="btn btn-primary custom-shadow">
+                    Log
+                </SfButton>
             </div>
         </div>
     </EditForm>
@@ -162,7 +163,7 @@
                 <ChartSeriesCollection>
                     <ChartSeries DataSource="@WeightLogs" XName="LocalTimestamp" YName="BodyFatWeight" Type="ChartSeriesType.Line" Name="Body Fat Mass" Width="2" Fill="#ff3545">
                         <ChartMarker Visible="true" Width="6" Height="6">
-                            <ChartDataLabel Visible="true"></ChartDataLabel>
+                            <ChartDataLabel Visible="true" Format="N2" />
                         </ChartMarker>
                     </ChartSeries>
                     <ChartSeries DataSource="@WeightLogs" XName="LocalTimestamp" YName="LeanMass" Type="ChartSeriesType.Line" Name="Lean Muscle Mass" Width="2" Fill="#ffbf00">
@@ -179,28 +180,37 @@
 @code {
     private WeightLog CurrentLog { get; set; } = new();         // Represents the current weight log entry
     private List<WeightLog> WeightLogs { get; set; } = new();   // List to store multiple weight log entries
-    private bool IsInitialized { get; set; } = false;           // Flag to check if data is initialized
+    private bool IsInitialized { get; set; } = false;           // Flag to check if data is initialized -- *** Is this needed???
 
+    // Range filtering options for the graphs
     private List<string> RangeOptions { get; set; } = new() { "Week", "Month", "Quarter", "Year", "All" };
     private string SelectedRange { get; set; } = "All";
     private List<WeightLog> FilteredLogs { get; set; } = new();
+
+    // Variables for chart axes (for graphs)
     private Syncfusion.Blazor.Charts.ChartAxis xAxis = new ChartAxis { ValueType = Syncfusion.Blazor.Charts.ValueType.DateTime };
     private Syncfusion.Blazor.Charts.ChartAxis yAxisWeight = new ChartAxis { Title = "Weight (lbs)", Minimum = 0 };
     private Syncfusion.Blazor.Charts.ChartAxis yAxisBodyFat = new ChartAxis { Title = "Body Fat (%)", Minimum = 0, Maximum = 100 };
 
-    // Method to retrieve logs from local storage after rendering
+    // The current user's height (retrieved from the main user info)
+    private decimal? currentUserHeight;
+
+    // Retrieve user information and weight logs from the database
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            // Load weight logs from local storage
-            WeightLogs = await LocalStorage.GetItemAsync<List<WeightLog>>("weightLogs") ?? new List<WeightLog>();
-
-            // Sort the logs by Timestamp
+            int userId = userSessionService.CurrentUserId;      // Retrieve the logged-in user's id from the sessionm
+            var userProfile = dbService.GetUserById(userId);    // Retrieve the user's profile to get the stored height
+            if (userProfile != null)
+            {
+                currentUserHeight = userProfile.Height;
+            }
+            // Retrieve weight logs from the database for the current user (using a foreign key relationship)
+            WeightLogs = dbService.GetMeasurements(userId);
             WeightLogs = WeightLogs.OrderBy(log => log.Timestamp).ToList();
-
-            IsInitialized = true;
-            StateHasChanged();
+            
+            StateHasChanged();  // Only call once the first render has completed
         }
     }
 
@@ -209,31 +219,37 @@
         UpdateFilteredLogs();
     }
 
-    // Method to log weight data and save to local storage (to be replaced with server-side implementation later...)
+    // Method to log weight data and store it in the database
+    // Uses the current user's id (as a foreign key)
     private async Task LogWeight()
     {
         // Create a new log entry using the current form data
         var newLog = new WeightLog
         {
             Weight = CurrentLog.Weight,
-            Height = CurrentLog.Height,
+            Height = currentUserHeight.HasValue ? (double?)Convert.ToDouble(currentUserHeight.Value) : null,    // Use the stored user height
             BodyFatPercentage = CurrentLog.BodyFatPercentage,
-            Timestamp = CurrentLog.Timestamp    // Use the user-specified timestamp
+            Timestamp = CurrentLog.Timestamp
         };
 
-        // Add the new log
-        WeightLogs.Add(newLog);
+        bool success = dbService.AddMeasurement(userSessionService.CurrentUserId, newLog.Weight, newLog.BodyFatPercentage, newLog.Timestamp);
+        if (success)
+        {
+            // Refresh weight logs from the database
+            WeightLogs = dbService.GetMeasurements(userSessionService.CurrentUserId);
+            WeightLogs = WeightLogs.OrderBy(log => log.Timestamp).ToList();
+        }
+        else
+        {
+            // *** Optionally, handle an error (e.g., display an error message) ***
+        }
 
-        // Sort the logs by Timestamp
-        WeightLogs = WeightLogs.OrderBy(log => log.Timestamp).ToList();
-
-        // Save the log only if the form passes validation
-        await LocalStorage.SetItemAsync("weightLogs", WeightLogs);
-
-        CurrentLog = new WeightLog();   // Reset the form
+        // Reset the form model
+        CurrentLog = new WeightLog();
         await RefreshUI();
     }
 
+    // Filters logs based on the selected time range
     private void UpdateFilteredLogs()
     {
         DateTime cutoffDate = SelectedRange switch
@@ -251,13 +267,18 @@
             .ToList();
     }
 
+    // Deletes a weight log from the database and refreshes the list
     private async Task DeleteLog(WeightLog log)
     {
-        WeightLogs.Remove(log);
-        await LocalStorage.SetItemAsync("weightLogs", WeightLogs);
-        await RefreshUI();
+        bool deleted = dbService.DeleteMeasurement(log.Id);
+        if (deleted)
+        {
+            WeightLogs = dbService.GetMeasurements(userSessionService.CurrentUserId);
+            await RefreshUI();
+        }
     }
 
+    // Forces the UI to refresh
     private async Task RefreshUI()
     {
         await InvokeAsync(StateHasChanged);

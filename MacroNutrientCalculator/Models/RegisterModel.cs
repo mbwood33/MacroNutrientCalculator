@@ -7,6 +7,8 @@ namespace MacroNutrientCalc.Models
     // Represents the data required for a user to register
     public class RegisterModel
     {
+        public int Id { get; set; } // Id property for storing the user's database ID
+        
         [Required(ErrorMessage = "Email is required.")]     // Ensures th Email field is not left empty
         [EmailAddress(ErrorMessage = "Invalid email address.")] // Validates that the Email field contains a valid email format
         public string Email { get; set; } = string.Empty;   // Property for user email; initialized to an empty string

@@ -24,9 +24,9 @@ namespace MacroNutrientCalc.Services
             double tdee = bmr * GetActivityMultiplier(stats.ActivityLevel); // Total Daily Energy Expenditure (TDEE) = BMR * activity multiplier
 
             double calorieAdjustment = goal.Type == "Lose Weight"
-                ? -3500 * double.Parse(goal.Rate) / 7
+                ? -3500 * double.Parse(goal.Rate ?? "0") / 7
                 : goal.Type == "Gain Weight"
-                    ? 3500 * double.Parse(goal.Rate) / 7
+                    ? 3500 * double.Parse(goal.Rate ?? "0") / 7
                     : 0;
 
             return new CalculationResults

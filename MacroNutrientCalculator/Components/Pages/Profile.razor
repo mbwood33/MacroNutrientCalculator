@@ -26,7 +26,7 @@
             <p>
                 <strong>Height:</strong>
                 @(userProfile.Height.HasValue
-                            ? userProfile.Height.HasValue.ToString()
+                            ? userProfile.Height.Value.ToString()
                             : "N/A")
             </p>
             <!-- Button to switch to edit mode -->

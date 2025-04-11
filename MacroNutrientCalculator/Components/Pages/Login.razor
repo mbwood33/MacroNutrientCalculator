@@ -1,6 +1,7 @@
 ﻿@page "/Login"
 @using MacroNutrientCalc.Models
 @inject MacroNutrientCalc.Services.DatabaseService dbService
+@inject MacroNutrientCalc.Services.UserSessionService userSessionService
 @inject NavigationManager Navigation
 @using Syncfusion.Blazor.Inputs
 @using Syncfusion.Blazor.Buttons
@@ -47,18 +48,25 @@
 
 
 @code {
-    private SignInModel signInModel = new();
-    private string message = string.Empty;
+    private SignInModel signInModel = new();    // Model for binding the login form
+    private string message = string.Empty;      // Variable for displaying status messaages
 
+    // Event handler for form submission
     private void HandleLogin()
     {
         // Validate the user's credentials using the DatabaseService.
-        bool isValid = dbService.ValidateUser(signInModel.Email, signInModel.Password);
-        if (isValid)
+        if (dbService.ValidateUser(signInModel.Email, signInModel.Password))
         {
+            // Rerieve the full user record from the database using the email
+            var user = dbService.GetUserByEmail(signInModel.Email);
+            if (user != null)
+            {
+                // Update the user session with the user's id, name, and email
+                userSessionService.SetCurrentUser(user.Id, user.Name, user.Email);
+            }
             message = "Login successful!";
-            // Redirect to the home page or user profile
-            Navigation.NavigateTo("/Dashboard");
+            
+            Navigation.NavigateTo("/Dashboard");    // Redirect to the home page or user profile
         }
         else
         {

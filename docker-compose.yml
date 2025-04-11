@@ -6,8 +6,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secretPassword123!
       POSTGRES_DB: MacronutrientDb
-    ports:
       - "5431:5432"
+    ports:
     volumes:
       - pgdata:/var/lib/postgresql/data
       
