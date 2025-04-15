@@ -36,9 +36,11 @@ namespace MacroNutrientCalc.Models
         public double? BMI => (Weight.HasValue && Height.HasValue)
             ? (Weight.Value / (Height.Value * Height.Value)) * 703 : null;
         public double? BodyFatWeight => BodyFatPercentage.HasValue && Weight.HasValue
-            ? Weight * (BodyFatPercentage.Value / 100) : null;
+            ? Math.Round(Weight.Value * (BodyFatPercentage.Value / 100), 2)
+            : null;
         public double? LeanMass => BodyFatWeight.HasValue && Weight.HasValue
-            ? Weight - BodyFatWeight : null;
+            ? Math.Round(Weight.Value - BodyFatWeight.Value, 2)
+            : null;
 
         public DateTime LocalTimestamp => Timestamp;
     }
