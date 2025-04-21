@@ -15,6 +15,10 @@ namespace MacroNutrientCalc.Services
         public DatabaseService(IConfiguration configuration)    // Constructor that initializes the DatabaseService with configuration settings
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection"); // Retrieve the "DefaultConnection" string from configuration (e.g., appsettings.json)
+            if (string.IsNullOrEmpty(_connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");    // Log an error or throw and exception to indicate a configuration issue
+            }
             InitializeDatabase();   // Ensure the users tables is initialized
             InitializeMeasurementsTable();  // Ensure the user measurements table is initialized
 

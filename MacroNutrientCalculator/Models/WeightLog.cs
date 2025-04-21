@@ -29,7 +29,7 @@ namespace MacroNutrientCalc.Models
         [Range(36, 120, ErrorMessage = "Height must be between 36 and 120 inches.")]
         public double? Height { get; set; } // Height in inches
 
-        [Range(0, 100, ErrorMessage = "Body fat percentage must bee between 0 and 100.")]
+        [Range(0, 100, ErrorMessage = "Body fat percentage must be between 0 and 100.")]
         public double? BodyFatPercentage { get; set; }  // Body fat percentage (Optional)
 
         // Calculated properties

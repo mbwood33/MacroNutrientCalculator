@@ -16,6 +16,7 @@
 @using Syncfusion.Blazor.Inputs
 @using Syncfusion.Blazor.Grids
 @using Syncfusion.Blazor.Charts
+@using Syncfusion.Blazor.Navigations
 
 @inject DatabaseService dbService       /* For database operations */
 @inject NavigationManager Navigation    /* For navigation if needed */
@@ -109,11 +110,10 @@
         <h4>Your Logs</h4>
 
         <!-- Syncfusion Data Grid for displaying the weight logs -->
-        <SfGrid DataSource="@FilteredLogs" AllowPaging="true" AllowSorting="true" PageSettings="new GridPageSettings { PageSize = 5 }">
+        <SfGrid DataSource="@FilteredLogs" AllowSorting="true">
             <GridColumns>
                 <GridColumn Field="LocalTimestamp" HeaderText="Date" Format="MM/dd/yyyy hh:mm tt" TextAlign="TextAlign.Center" Width="150" />
                 <GridColumn Field="Weight" HeaderText="Weight (lbs)" TextAlign="TextAlign.Center" Width="120" />
-                <GridColumn Field="Height" HeaderText="Height (in)" TextAlign="TextAlign.Center" Width="120" />
                 <GridColumn Field="BMI" HeaderText="BMI" Format="N2" TextAlign="TextAlign.Center" Width="100" />
                 <GridColumn Field="BodyFatPercentage" HeaderText="Body Fat (%)" Format="N2" TextAlign="TextAlign.Center" Width="120" />
                 <GridColumn Field="BodyFatWeight" HeaderText="Body Fat Weight (lbs)" Format="N2" TextAlign="TextAlign.Center" Width="150" />
@@ -212,6 +212,12 @@
 
     // The current user's height (retrieved from the main user info)
     private decimal? currentUserHeight;
+
+    private GridPageSettings _pageSettings = new GridPageSettings       // A single, long-lived page-settings object
+    {
+        PageSize = 5,
+        CurrentPage = 1    
+    };     
 
     // Variables for chart axes (for graphs)
     private Syncfusion.Blazor.Charts.ChartAxis xAxis = new ChartAxis { ValueType = Syncfusion.Blazor.Charts.ValueType.DateTime };
@@ -325,6 +331,12 @@
             UpdateFilteredLogs();
             await RefreshUI();
         }
+    }
+
+    private async Task GridActionComplete(ActionEventArgs<WeightLog> args)
+    {
+        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Paging)
+            _pageSettings.CurrentPage = args.CurrentPage;   // sync the grid's page back into our settings
     }
 
     // Forces the UI to refresh
