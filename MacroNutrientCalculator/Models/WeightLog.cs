@@ -34,7 +34,8 @@ namespace MacroNutrientCalc.Models
 
         // Calculated properties
         public double? BMI => (Weight.HasValue && Height.HasValue)
-            ? (Weight.Value / (Height.Value * Height.Value)) * 703 : null;  // BMI
+            ? (Weight.Value / (Height.Value * Height.Value)) * 703
+            : null;  // BMI
         public double? BodyFatWeight => BodyFatPercentage.HasValue && Weight.HasValue
             ? Math.Round(Weight.Value * (BodyFatPercentage.Value / 100), 2)
             : null;     // Body fat percentage (rounds to 2 decimal places)

@@ -65,7 +65,7 @@
         <div class="row g-3 mt-3">
             <div class="col-md-6">
                 <label for="timestamp" class="form-label">Timestamp:</label>
-                <SfDateTimePicker TValue="DateTime" @bind-Value="CurrentLog.Timestamp" Placeholder="Select date and time" CssClass="form-control shadow"></SfDateTimePicker>
+                <SfDateTimePicker TValue="DateTime" @bind-Value="CurrentLog.Timestamp" Placeholder="Select date and time" CssClass="form-control shadow" />
                 <ValidationMessage For="@(() => CurrentLog.Timestamp)" />
             </div>
             <div class="col-md-6">
@@ -82,7 +82,7 @@
 
         <!-- Display the stored height from the user profile -->
         <div class="alert alert-info mt-3">
-            Using stored height: @((currentUserHeight.HasValue) ? currentUserHeight.Value.ToString() : "Not available")
+            Using stored height: @(currentUserHeight?.ToString() ?? "Not available")
         </div>
 
         <!-- Submit Button Row -->
@@ -100,7 +100,15 @@
         <div class="row g-3 mb-3">
             <div class="col-md-4">
                 <label for="range" class="form-label">Select Range</label>
-                <SfDropDownList TValue="string" TItem="string" @bind-Value="SelectedRange" DataSource="@RangeOptions" Placeholder="Select Range" CssClass="form-control shadow" />
+                <SfDropDownList
+                TValue="string"
+                TItem="string"
+                DataSource="@RangeOptions"
+                Value="@SelectedRange"
+                ValueChanged="@( (string newVal) => SelectedRange = newVal )"
+                ValueExpression="@(() => SelectedRange)"
+                Placeholder="Select Range"
+                CssClass="form-control shadow mb-3" />
             </div>
         </div>
     </div>
@@ -110,7 +118,8 @@
         <h4>Your Logs</h4>
 
         <!-- Syncfusion Data Grid for displaying the weight logs -->
-        <SfGrid DataSource="@FilteredLogs" AllowSorting="true">
+        <SfGrid DataSource="@FilteredLogs" AllowSorting="true" AllowPaging="true">
+            <GridPageSettings PageSize="10"></GridPageSettings>
             <GridColumns>
                 <GridColumn Field="LocalTimestamp" HeaderText="Date" Format="MM/dd/yyyy hh:mm tt" TextAlign="TextAlign.Center" Width="150" />
                 <GridColumn Field="Weight" HeaderText="Weight (lbs)" TextAlign="TextAlign.Center" Width="120" />
@@ -187,25 +196,26 @@
 </div>
 
 @code {
+    private SfGrid<WeightLog> Grid;
     private WeightLog CurrentLog { get; set; } = new();         // Represents the current weight log entry
-    private List<WeightLog> WeightLogs { get; set; } = new();   // List to store multiple weight log entries
+    private List<WeightLog> AllLogs { get; set; } = new();   // List to store multiple weight log entries
     private List<WeightLog> FilteredLogs { get; set; } = new(); // Weight logs filtered by selected range
 
     // Range filtering options for the graphs
     private List<string> RangeOptions { get; set; } = new() { "Week", "Month", "Quarter", "Year", "All" };
 
-    // Using a property with a backing field to update FilteredLogs when the dropdown changes
+    // Backing field for dropdown
     private string _selectedRange = "All";  // Backing field for the SelectedRange 
     private string SelectedRange
     {
         get => _selectedRange;      // Returns the current selected range
         set
         {
-            if (_selectedRange != value)    // Check if the new value is different from the current value
+            if (_selectedRange != value) return;
             {
                 _selectedRange = value;     // Update the backing field with the new range
-                UpdateFilteredLogs();       // Update the filtered logs based on the new selected range
-                InvokeAsync(StateHasChanged);   // Refresh the UI asynchronously so that changes are rendered
+                ApplyRangeFilter();
+                InvokeAsync(StateHasChanged);
             }
         }
     }
@@ -213,17 +223,53 @@
     // The current user's height (retrieved from the main user info)
     private decimal? currentUserHeight;
 
-    private GridPageSettings _pageSettings = new GridPageSettings       // A single, long-lived page-settings object
-    {
-        PageSize = 5,
-        CurrentPage = 1    
-    };     
-
     // Variables for chart axes (for graphs)
     private Syncfusion.Blazor.Charts.ChartAxis xAxis = new ChartAxis { ValueType = Syncfusion.Blazor.Charts.ValueType.DateTime };
     private Syncfusion.Blazor.Charts.ChartAxis yAxisWeight = new ChartAxis { Title = "Weight (lbs)", Minimum = 0 };
     private Syncfusion.Blazor.Charts.ChartAxis yAxisBodyFat = new ChartAxis { Title = "Body Fat (%)", Minimum = 0, Maximum = 100 };
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Load user height
+        // var profile = dbService.GetUserById(userSessionService.CurrentUserId);
+        // currentUserHeight = profile?.Height;
+
+        // Load all logs and apply the default filter
+        // AllLogs = dbService.GetMeasurements(userSessionService.CurrentUserId).OrderBy(l => l.Timestamp).ToList();
+        // ApplyRangeFilter();
+
+        var userId = userSessionService.CurrentUserId;
+        AllLogs = dbService
+            .GetMeasurements(userId)
+            .OrderBy(l => l.Timestamp)
+            .ToList();
+        ApplyRangeFilter();
+    }
+
+    private void ApplyRangeFilter()
+    {
+        var cutoff = _selectedRange switch
+        {
+            "Week" => DateTime.Now.AddDays(-7),
+            "Month" => DateTime.Now.AddMonths(-1),
+            "Quarter" => DateTime.Now.AddMonths(-3),
+            "Year" => DateTime.Now.AddYears(-1),
+            _ => DateTime.MinValue
+        };
+
+        FilteredLogs = _selectedRange == "All"
+            ? AllLogs.ToList()
+            : AllLogs
+                .Where(l => l.Timestamp >= cutoff)
+                .OrderBy(l => l.Timestamp)
+                .ToList();
+
+        // Tell Syncfusion to redraw
+        _ = Grid?.Refresh();
+    }
+
+    // -------------------
+    /*
     // Retrieve user profile and full weight logs from the database on first render
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -235,14 +281,22 @@
             if (userProfile != null)
             {
                 currentUserHeight = userProfile.Height;
-            }
+                }
 
             // Retrieve weight logs from the database for the current user (using a foreign key relationship)
             WeightLogs = dbService.GetMeasurements(userId).OrderBy(log => log.Timestamp).ToList();  // Load WeightLogs from database
-            FilteredLogs = new List<WeightLog>(WeightLogs);     // Initialize FilteredLogs as a new list that will be reused
+            // FilteredLogs = new List<WeightLog>(WeightLogs);     // Initialize FilteredLogs as a new list that will be reused
+            var h = currentUserHeight.HasValue ? Convert.ToDouble(currentUserHeight.Value) : (double?)null;
+            foreach (var entry in WeightLogs)
+            {
+                entry.Height = h;
+                }
+
             StateHasChanged();  // Only call once the first render has completed
+            }
         }
-    }
+    */
+    // ---------------------
 
     /*
     protected override void OnParametersSet()
@@ -254,44 +308,39 @@
     // May not be necessary
 
     // Handler for when the range dropdown changes
-    private async Task OnRangeChanged(string newRange)
-    {
-        SelectedRange = newRange;
-        UpdateFilteredLogs();
-        await RefreshUI();
-    }
+    // private async Task OnRangeChanged(string newRange)
+    // {
+        // selectedRange = newRange;
+        // ApplyRangeFilter();
+        // StateHasChanged();
+    // }
 
     // Method to log weight data and store it in the database
     // Uses the current user's id (as a foreign key)
     private async Task LogWeight()
     {
-        // Create a new log entry using the current form data
-        var newLog = new WeightLog
-        {
-            Weight = CurrentLog.Weight,
-            Height = currentUserHeight.HasValue ? (double?)Convert.ToDouble(currentUserHeight.Value) : null,    // Use the stored user height
-            BodyFatPercentage = CurrentLog.BodyFatPercentage,
-            Timestamp = CurrentLog.Timestamp
-        };
+        // Insert with Timestamp
+        bool success = dbService.AddMeasurement(
+            userSessionService.CurrentUserId,
+            CurrentLog.Weight,
+            CurrentLog.BodyFatPercentage,
+            CurrentLog.Timestamp
+        );
 
-        bool success = dbService.AddMeasurement(userSessionService.CurrentUserId, newLog.Weight, newLog.BodyFatPercentage, newLog.Timestamp);
         if (success)
         {
-            // Refresh weight logs from the database
-            WeightLogs = dbService.GetMeasurements(userSessionService.CurrentUserId);
-            WeightLogs = WeightLogs.OrderBy(log => log.Timestamp).ToList();
-            UpdateFilteredLogs();
-        }
-        else
-        {
-            // *** Optionally, handle an error (e.g., display an error message) ***
+            // Reload & re-filter
+            AllLogs = dbService.GetMeasurements(userSessionService.CurrentUserId)
+                .OrderBy(l => l.Timestamp)
+                .ToList();
+            ApplyRangeFilter();
         }
 
-        // Reset the form model
         CurrentLog = new WeightLog();
-        await RefreshUI();
     }
 
+    // -----------------------
+    /*
     // Filters WeightLogs into FilteredLogs based on the selected time range
     private void UpdateFilteredLogs()
     {
@@ -304,44 +353,43 @@
             _ => DateTime.MinValue
         };
 
-        FilteredLogs.Clear();       // Instead of reassigning FilteredLogs to a new list, update the existing list
+        // FilteredLogs.Clear();       // Instead of reassigning FilteredLogs to a new list, update the existing list
 
-        if (SelectedRange == "All")
-        {
-            FilteredLogs.AddRange(WeightLogs);
-        }
+        if (selectedRange == "All")
+            FilteredLogs.AllLogs.ToList();
         else
-        {
             // Add the items that meet the cutoff criteria
-            FilteredLogs.AddRange(
-                WeightLogs.Where(log => log.Timestamp >= cutoffDate)
-                          .OrderBy(log => log.Timestamp)
-            );
-        }
+            FilteredLogs.AllLogs
+                           .Where(log => log.Timestamp >= cutoffDate)
+                           .OrderBy(log => log.Timestamp)
+                           .ToList();
     }
+    // -----------------------
+    */
 
     // Deletes a weight log from the database and refreshes the UI
     private async Task DeleteLog(WeightLog log)
     {
-        bool deleted = dbService.DeleteMeasurement(log.Id);
-        if (deleted)
+        if (dbService.DeleteMeasurement(log.Id))  
         {
-            WeightLogs = dbService.GetMeasurements(userSessionService.CurrentUserId);
-            WeightLogs = WeightLogs.OrderBy(log => log.Timestamp).ToList();
-            UpdateFilteredLogs();
-            await RefreshUI();
+            AllLogs = dbService.GetMeasurements(userSessionService.CurrentUserId).OrderBy(log => log.Timestamp).ToList();
+
+        // var h = currentUserHeight.HasValue ? Convert.ToDouble(currentUserHeight.Value): (double?)null;
+            // foreach (var entry in WeightLogs)
+            // {
+            //   entry.Height = h;
+            // }
+
+            ApplyRangeFilter();
         }
     }
 
-    private async Task GridActionComplete(ActionEventArgs<WeightLog> args)
-    {
-        if (args.RequestType == Syncfusion.Blazor.Grids.Action.Paging)
-            _pageSettings.CurrentPage = args.CurrentPage;   // sync the grid's page back into our settings
-    }
-
+    // -------------------------
     // Forces the UI to refresh
+    /*
     private async Task RefreshUI()
     {
         await InvokeAsync(StateHasChanged);
     }
+    */
 }
